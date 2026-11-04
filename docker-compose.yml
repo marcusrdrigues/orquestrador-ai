@@ -1,0 +1,29 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    image: orquestrador-ai:1.0.0
+    container_name: orquestrador-ai-api
+
+    environment:
+      SERVER_PORT: "8083"
+      APP_AGENTS_RH_URL: "http://agente-rh:8082"
+      APP_AGENTS_RH_CARDPATH: "/.well-known/agent-card.json"
+      APP_AGENTS_RH_TIMEOUTSECONDS: "90"
+
+    ports:
+      - "8083:8083"
+
+    networks:
+      agentes-network:
+        aliases:
+          - orquestrador-ai
+
+    restart: unless-stopped
+
+networks:
+  agentes-network:
+    name: agentes-network
+    external: true
