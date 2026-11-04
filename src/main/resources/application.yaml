@@ -1,0 +1,18 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: orquestrador-ai
+
+app:
+  agents:
+    rh:
+      url: http://localhost:8082
+      card-path: /.well-known/agent-card.json
+      timeout-seconds: 90
+
+logging:
+  level:
+    br.com.cotiinformatica: DEBUG
+    io.a2a: INFO
