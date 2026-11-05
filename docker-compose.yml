@@ -9,12 +9,28 @@ services:
 
     environment:
       SERVER_PORT: "8083"
+
+      APP_OPENAI_APIKEY: "${OPENAI_API_KEY}"
+
       APP_AGENTS_RH_URL: "http://agente-rh:8082"
       APP_AGENTS_RH_CARDPATH: "/.well-known/agent-card.json"
       APP_AGENTS_RH_TIMEOUTSECONDS: "90"
 
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres-auditoria:5432/bd_orquestrador"
+      SPRING_DATASOURCE_USERNAME: "coti"
+      SPRING_DATASOURCE_PASSWORD: "coti"
+
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: "http://zipkin:9411/api/v2/spans"
+      MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "1.0"
+
     ports:
       - "8083:8083"
+
+    depends_on:
+      postgres-auditoria:
+        condition: service_healthy
+      zipkin:
+        condition: service_started
 
     networks:
       agentes-network:
@@ -22,6 +38,49 @@ services:
           - orquestrador-ai
 
     restart: unless-stopped
+
+  postgres-auditoria:
+    image: postgres:16
+    container_name: orquestrador-postgres
+
+    environment:
+      POSTGRES_DB: bd_orquestrador
+      POSTGRES_USER: coti
+      POSTGRES_PASSWORD: coti
+
+    ports:
+      - "127.0.0.1:5436:5432"
+
+    volumes:
+      - postgres_auditoria_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U coti -d bd_orquestrador
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      - agentes-network
+
+    restart: unless-stopped
+
+  zipkin:
+    image: openzipkin/zipkin:3
+    container_name: orquestrador-zipkin
+
+    ports:
+      - "127.0.0.1:9411:9411"
+
+    networks:
+      - agentes-network
+
+    restart: unless-stopped
+
+volumes:
+  postgres_auditoria_data:
 
 networks:
   agentes-network:

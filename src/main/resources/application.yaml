@@ -5,14 +5,51 @@ spring:
   application:
     name: orquestrador-ai
 
+  datasource:
+    url: jdbc:postgresql://localhost:5436/bd_orquestrador
+    username: coti
+    password: coti
+    hikari:
+      connection-timeout: 5000
+
+  sql:
+    init:
+      mode: always
+
 app:
+  openai:
+    api-key: ${OPENAI_API_KEY}
+    model: gpt-4.1-mini
+
+  pricing:
+    input-per-million: 0.40
+    cached-input-per-million: 0.10
+    output-per-million: 1.60
+
   agents:
     rh:
       url: http://localhost:8082
       card-path: /.well-known/agent-card.json
       timeout-seconds: 90
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+
+  endpoint:
+    health:
+      show-details: never
+
+  tracing:
+    sampling:
+      probability: 1.0
+
 logging:
   level:
-    br.com.cotiinformatica: DEBUG
-    io.a2a: INFO
+    root: INFO
+    br.com.cotiinformatica: INFO
+
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %-5level [trace=%X{traceId:-} span=%X{spanId:-}] %logger{36} - %msg%n"
