@@ -1,18 +1,16 @@
 package br.com.cotiinformatica.orquestrador_ai.controllers;
 
-import java.util.Map;
+import br.com.cotiinformatica.orquestrador_ai.dtos.*;
+import br.com.cotiinformatica.orquestrador_ai.services.*;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import br.com.cotiinformatica.orquestrador_ai.dtos.OrquestracaoResponse;
-import br.com.cotiinformatica.orquestrador_ai.dtos.PerguntaRequest;
-import br.com.cotiinformatica.orquestrador_ai.services.AgenteRhA2AClient;
-import br.com.cotiinformatica.orquestrador_ai.services.OrquestradorService;
 import jakarta.validation.Valid;
+
+import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/orquestrador")
@@ -29,7 +27,6 @@ public class OrquestradorController {
         this.a2aClient = a2aClient;
     }
 
-    // Executa o Agente RH por A2A.
     @PostMapping("/executar")
     public OrquestracaoResponse executar(
             @Valid @RequestBody PerguntaRequest request) {
@@ -37,7 +34,6 @@ public class OrquestradorController {
         return service.executar(request);
     }
 
-    // Descobre o Agente RH pelo Agent Card.
     @GetMapping("/agentes/rh")
     public Map<String, Object> consultarAgenteRh() {
 
@@ -51,7 +47,6 @@ public class OrquestradorController {
         );
     }
 
-    // Verifica se o Orquestrador está iniciado.
     @GetMapping("/status")
     public Map<String, String> status() {
 
@@ -59,5 +54,24 @@ public class OrquestradorController {
                 "aplicacao", "Orquestrador AI",
                 "status", "Executando"
         );
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ProblemDetail> tratarFalha(
+            ResponseStatusException e) {
+
+        ProblemDetail problema =
+                ProblemDetail.forStatusAndDetail(
+                        e.getStatusCode(),
+                        e.getReason() == null
+                                ? "Falha na execução."
+                                : e.getReason()
+                );
+
+        problema.setTitle("Falha no orquestrador");
+
+        return ResponseEntity
+                .status(e.getStatusCode())
+                .body(problema);
     }
 }
